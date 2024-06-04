@@ -38,7 +38,7 @@ def update(frame, theta1_data, theta2_data):
     return pendulum1, pendulum2
 
 # CSVファイルのパス
-csv_file_path = 'rl_test_data_epoch_5.csv'
+csv_file_path = 'dp_euler2_epoch_1.csv'
 
 # CSVファイルからデータを読み取る
 time_data, theta1_data, theta2_data = read_csv_data(csv_file_path)
@@ -55,11 +55,9 @@ pendulum2, = ax.plot([], [], lw=2, label='Link 2')
 ax.legend()
 
 # アニメーションの作成
-ani = FuncAnimation(fig, update, frames=len(time_data), fargs=(theta1_data, theta2_data), init_func=init, blit=True, interval=2)
+ani = FuncAnimation(fig, update, frames=len(time_data), fargs=(theta1_data, theta2_data), init_func=init, blit=False, interval=2)
 
-# アニメーションの保存
-save_path = 'rl_test_data_epoch_5.gif'
-ani.save(save_path, writer='pillow', fps=30)
-print(f'Animation saved to {save_path}')
-
+# アニメーションをMP4形式で保存
+ani.save('animation.mp4', writer='ffmpeg', fps=30)
 plt.show()
+
