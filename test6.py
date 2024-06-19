@@ -37,7 +37,7 @@ q2_dot0 = 0.0
 dt = 0.01
 
 # CSVファイルの保存先ディレクトリ
-save_dir = r'data4'
+save_dir = r'data5'
 
 # ディレクトリが存在しない場合は作成
 if not os.path.exists(save_dir):
@@ -104,12 +104,12 @@ def update_world(q1, q2, q1_dot, q2_dot, action):
     q1_dot_new = q1_dot + q1_dot_dot * dt
     q2_dot_new = q2_dot + q2_dot_dot * dt
 
-     # 角度制約
-    q2_new = np.clip(q2_new, 0, 29 * np.pi / 36)
+    #  # 角度制約
+    # q2_new = np.clip(q2_new, 0, 29 * np.pi / 36)
     return q1_new, q2_new, q1_dot_new, q2_dot_new
 
 max_number_of_steps = 6000 # 最大ステップ数
-num_episodes = 30
+num_episodes = 10
 
 # Q = np.random.uniform(low = 1, high = 1, size = (30**30, 9))
 # Qテーブルの初期化
