@@ -37,7 +37,7 @@ q2_dot0 = 0.0
 dt = 0.01
 
 # CSVファイルの保存先ディレクトリ
-save_dir = r'data5'
+save_dir = r'data6'
 
 # ディレクトリが存在しない場合は作成
 if not os.path.exists(save_dir):
@@ -121,14 +121,20 @@ num_actions = 9  # 行動数
 
 Q = np.zeros((num_q1_bins, num_q2_bins, num_q1_dot_bins, num_q2_dot_bins, num_actions))
 
+# リンク1の可動範囲を確認して設定(-2πから2π)
+q1_min, q1_max = -2 * np.pi, 2 * np.pi
+
+# リンク2の可動範囲を確認して設定(0から-29π/36)
+q2_min, q2_max = 0, 29 * np.pi / 36
+
 # binの設定（等間隔数列で返す）
 def bins(clip_min, clip_max, num):
     return np.linspace(clip_min, clip_max, num + 1)[1:-1]
 
 def digitize_state(q1, q2, q1_dot, q2_dot):
     digitized = [
-        np.digitize(q1, bins = bins(-np.pi, np.pi, 30)) - 1,
-        np.digitize(q2, bins = bins(0, 29*np.pi / 36, 30)) - 1,
+        np.digitize(q1, bins = bins(q1_min, q1_max, 30)) - 1,
+        np.digitize(q2, bins = bins(q2_min, q2_max, 30)) - 1,
         np.digitize(q1_dot, bins = bins(-30, 30, 30)) - 1,
         np.digitize(q2_dot, bins = bins(-3.0, 3.0, 30)) - 1
     ]
@@ -178,10 +184,18 @@ def q_learning(update_world):
             for i in range(max_number_of_steps):
                 next_q1, next_q2, next_q1_dot, next_q2_dot = update_world(q1, q2, q1_dot, q2_dot, action)
 
-                if next_q1 > q1:
-                    reward = 1
+                # if next_q1 > q1:
+                #     reward = 1
+                # else:
+                #     reward = -2
+                
+                if next_q1_dot > q1_dot:
+                    reward = 2
                 else:
-                    reward = -1
+                    reward = -2
+                
+                if 0 <= next_q2 <= 29 * np.pi / 36:
+                    reward = 1
 
                 next_state = digitize_state(next_q1, next_q2, next_q1_dot, next_q2_dot)
                 next_action = get_action(next_state, episode)
