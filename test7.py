@@ -34,10 +34,10 @@ q20 = 0
 q1_dot0 = 0.0
 q2_dot0 = 0.0
 
-dt = 0.01
+dt = 0.001
 
 # CSVファイルの保存先ディレクトリ
-save_dir = r'try2'
+save_dir = r'try3'
 
 # ディレクトリが存在しない場合は作成
 if not os.path.exists(save_dir):
@@ -162,7 +162,7 @@ def get_action(q1_bin, q2_bin, q1_dot_bin, q2_dot_bin):
         return np.argmax(Q[q1_bin, q2_bin, q1_dot_bin, q2_dot_bin, :])
 
 # Q学習のメイン関数
-def q_learning(update_world):
+def q_learning(runge_kutta):
     for epoch in range(num_episodes):  
         total_reward = 0
         q1, q2, q1_dot, q2_dot = reset()
@@ -194,7 +194,7 @@ def q_learning(update_world):
                 else:
                     reward += -1
 
-                total_reward = reward
+                total_reward += reward
                 Q[q1_bin, q2_bin, q1_dot_bin, q2_dot_bin, action] += alpha * (reward + gamma * np.max(Q[next_q1_bin, next_q2_bin, next_q1_dot_bin, next_q2_dot_bin, action]) + (1 - alpha) * Q[q1_bin, q2_bin, q1_dot_bin, q2_dot_bin, action])
 
                 q1 = next_q1
@@ -216,4 +216,4 @@ if __name__ == "__main__":
     # mainプログラムの実行
     # main()
     # Q学習の実行
-    q_learning(update_world)
+    q_learning(runge_kutta)
