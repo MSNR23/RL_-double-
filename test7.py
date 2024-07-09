@@ -162,8 +162,7 @@ alpha = 0.1  # 学習率
 gamma = 0.9  # 割引率
 epsilon = 0.3  # ε-greedy法のε
 
-# Q = np.random.uniform(low = 1, high = 1, size = (30**30, 9))
-# Qテーブルの初期化
+# Qテーブルのbin数
 num_q1_bins = 4
 num_q2_bins = 4
 num_q1_dot_bins = 4
@@ -171,41 +170,17 @@ num_q2_dot_bins = 4
 num_actions = 9  # 行動数
 
 Q = np.zeros((num_q1_bins, num_q2_bins, num_q1_dot_bins, num_q2_dot_bins, num_actions))
-
-# # 状態の離散化関数
-# def digitize_state(q1, q2, q1_dot, q2_dot):
-#     q1_bin = np.digitize(q1, np.linspace(-np.pi, np.pi, num_q1_bins + 1)) - 1
-#     q2_bin = np.digitize(q2, np.linspace(-np.pi, np.pi, num_q2_bins + 1)) - 1
-
-#     q1_dot_bin = np.digitize(q1_dot, np.linspace(-4.0, 4.0, num_q1_dot_bins + 1)) - 1
-#     q2_dot_bin = np.digitize(q2_dot, np.linspace(-4.0, 4.0, num_q2_dot_bins + 1)) - 1
-
-#     # theta_binとomega_binが範囲内に収まるように調整
-#     q1_bin = max(0, min(num_q1_bins - 1, q1_bin))
-#     q2_bin = max(0, min(num_q2_bins - 1, q2_bin))
-#     q1_dot_bin = max(0, min(num_q1_dot_bins - 1, q1_dot_bin))
-#     q2_dot_bin = max(0, min(num_q2_dot_bins - 1, q2_dot_bin))
-
-#     return q1_bin, q2_bin, q1_dot_bin, q2_dot_bin
+def bins(clip_min, clip_,max, num):
+    return np.linspace(clip_min, clip_max, num + 1)[1:-1]
+    
 # 状態の離散化関数
 def digitize_state(q1, q2, q1_dot, q2_dot):
-    q1_bins = np.linspace(-np.pi, np.pi, num_q1_bins + 1)
-    q2_bins = np.linspace(215 * np.pi / 180, 359 * np.pi / 180, num_q2_bins + 1)  # リンク2の範囲を0~145度に設定
-    q1_dot_bins = np.linspace(-10.0, 10.0, num_q1_dot_bins + 1)
-    q2_dot_bins = np.linspace(-10.0, 10.0, num_q2_dot_bins + 1)
+    digitized = [np.digitize(q1, bins = bins(-np.pi, np.pi, num_q1_bins)),
+                 np.digitize(q2, bins = bins(0, 145 * np.pi / 180, num_q2_bins)),
+                 np.digitize(q1_dot, bins = bins(-10.0, 10.0, num_q1_dot_bins)),
+                 np.digitize(q2_dot, bins = bins(-10.0, 10.0, num_q2_dot_bins))]
 
-    q1_bin = np.digitize(q1, q1_bins) - 1
-    q2_bin = np.digitize(q2, q2_bins) - 1
-    q1_dot_bin = np.digitize(q1_dot, q1_dot_bins) - 1
-    q2_dot_bin = np.digitize(q2_dot, q2_dot_bins) - 1
-
-    # ビンが範囲外の場合の処理
-    q1_bin = max(0, min(num_q1_bins - 1, q1_bin))
-    q2_bin = max(0, min(num_q2_bins - 1, q2_bin))
-    q1_dot_bin = max(0, min(num_q1_dot_bins - 1, q1_dot_bin))
-    q2_dot_bin = max(0, min(num_q2_dot_bins - 1, q2_dot_bin))
-
-    return q1_bin, q2_bin, q1_dot_bin, q2_dot_bin
+    return sum([x* (4**i) for i, x in enumerate(digitized)]) 
 
 # リセット関数
 def reset():
