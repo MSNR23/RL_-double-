@@ -200,7 +200,7 @@ def get_action(q1_bin, q2_bin, q1_dot_bin, q2_dot_bin):
 
 # 報酬関数の修正
 def compute_reward(q1, q2, q1_dot, q2_dot, next_q1, next_q2):
-    reward = q1 + 10 * q1_dot  # リンク1の角速度に応じた報酬 
+    reward = -(q1 + 10 * q1_dot)  # リンク1の角速度に応じた報酬 
 
     # if 
     
