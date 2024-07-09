@@ -29,15 +29,15 @@ b1 = 0.1
 b2 = 0.1
 
 # 初期条件
-q10 = -3 * np.pi / 2
-q20 = np.pi / 4
+q10 = 120 * np.pi / 180
+q20 = 3 * np.pi / 4
 q1_dot0 = 0.0
 q2_dot0 = 0.0
 
 dt = 0.001
 
 # CSVファイルの保存先ディレクトリ
-save_dir = r'try7'
+save_dir = r'try8'
 
 # ディレクトリが存在しない場合は作成
 if not os.path.exists(save_dir):
@@ -68,9 +68,9 @@ def update_world(q1, q2, q1_dot, q2_dot, F, action):
 
     # リンク2が可動範囲の限界に達した場合の外力
     if q2 <= 0:
-        F[1, 0] = 10.0  # 0度のとき、正の方向に5N
+        F[1, 0] += 100.0  # 0度のとき、正の方向に5N
     elif q2 >= np.radians(145):
-        F[1, 0] = -10.0  # 145度のとき、負の方向に5N
+        F[1, 0] += -100.0  # 145度のとき、負の方向に5N
 
     # 質量行列
     M_11 = m1*lg1**2 + I1 + m2*(l1**2 + lg2**2 + 2*l1*lg2*np.cos(q2)) + I2
@@ -87,8 +87,8 @@ def update_world(q1, q2, q1_dot, q2_dot, F, action):
     C = np.array([[C_11], [C_21]])
 
     # 重力ベクトル
-    G_11 = m1 * g * lg1 * np.cos(q1) + m2 * g * (l1 * np.cos(q1) + lg2 * np.cos(q2))
-    G_21 = m2 * g * lg2 * np.cos(q2)
+    G_11 = m1 * g * lg1 * np.cos(q1) + m2 * g * (l1 * np.cos(q1) + lg2 * np.cos(q1 + q2))
+    G_21 = m2 * g * lg2 * np.cos(q1 + q2)
     G = np.array([[G_11], [G_21]])
 
     # 粘性
@@ -150,7 +150,7 @@ def runge_kutta(t, q1, q2, q1_dot, q2_dot, action, dt):
      # 角度制約を追加
     # q2_new = np.clip(q2_new, 215 * np.pi / 180, 359 * np.pi / 180)
 
-    q2_new = np.clip(q2_new, 0, 145 * np.pi / 180)
+    # q2_new = np.clip(q2_new, 0, 145 * np.pi / 180)
 
     return q1_new, q2_new, q1_dot_new, q2_dot_new
 
@@ -170,7 +170,7 @@ num_q2_dot_bins = 4
 num_actions = 9  # 行動数
 
 Q = np.zeros((num_q1_bins, num_q2_bins, num_q1_dot_bins, num_q2_dot_bins, num_actions))
-def bins(clip_min, clip_,max, num):
+def bins(clip_min, clip_max, num):
     return np.linspace(clip_min, clip_max, num + 1)[1:-1]
     
 # 状態の離散化関数
@@ -180,7 +180,7 @@ def digitize_state(q1, q2, q1_dot, q2_dot):
                  np.digitize(q1_dot, bins = bins(-10.0, 10.0, num_q1_dot_bins)),
                  np.digitize(q2_dot, bins = bins(-10.0, 10.0, num_q2_dot_bins))]
 
-    return sum([x* (4**i) for i, x in enumerate(digitized)]) 
+    return digitized[0], digitized[1], digitized[2], digitized[3]
 
 # リセット関数
 def reset():
@@ -255,14 +255,16 @@ def q_learning(runge_kutta):
                 sumReward += gamma ** (i + 1) * reward
                 Q[q1_bin, q2_bin, q1_dot_bin, q2_dot_bin, action] += alpha * (reward + gamma * np.max(Q[next_q1_bin, next_q2_bin, next_q1_dot_bin, next_q2_dot_bin, action]) + (1 - alpha) * Q[q1_bin, q2_bin, q1_dot_bin, q2_dot_bin, action])
 
+                # CSVファイルにデータを保存
+                csv_writer.writerow([i * dt, q1* 180 / np.pi, q2* 180 / np.pi, q1_dot, q2_dot, total_reward])
+
                 q1 = next_q1
                 q2 = next_q2
                 q1_dot = next_q1_dot
                 q2_dot = next_q2_dot
                 action = next_action
 
-                # CSVファイルにデータを保存
-                csv_writer.writerow([i * dt, q1, q2, q1_dot, q2_dot, total_reward])
+
 
                 print(f'Epoch: {epoch + 1}, Step: {i}, Total Reward: {total_reward}')
                 time.sleep(0.01)
