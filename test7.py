@@ -43,7 +43,7 @@ save_dir = r'try7'
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 
-# 運動方程式（オイラー法）
+# 運動方程式
 def update_world(q1, q2, q1_dot, q2_dot, F, action):
     # 行動に基づく外力を設定
     F = np.zeros((2, 1))
