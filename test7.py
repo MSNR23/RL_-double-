@@ -191,9 +191,9 @@ def compute_reward(q1, q2, q1_dot, q2_dot, next_q1):
     v2 = np.sqrt(v_x2**2 + v_y2**2)
 
     if next_q1 < q1:
-        q1_reward += 1
+        q1_reward = 1
     else:
-        q1_reward += -1
+        q1_reward = -1
 
     # 報酬 = -上腕リンクの位置＋あるステップ前後の上腕リンクの位置関係＋10×前腕リンクの先端の速度
     reward = - q1 + q1_reward + 10 * v2
