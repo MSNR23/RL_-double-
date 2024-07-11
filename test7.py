@@ -1,3 +1,4 @@
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -13,8 +14,8 @@ l1 = 1.0
 l2 = 1.0
 
 # 重心までの長さ
-lg1 = 0.5
-lg2 = 0.5
+lg1 = l1 / 2
+lg2 = l2 / 2
 
 # 質点の質量
 m1 = 5.0
@@ -30,47 +31,48 @@ b2 = 0.1
 
 # 初期条件
 q10 = 120 * np.pi / 180
-q20 = 3 * np.pi / 4
+q20 = 120 * np.pi / 180
+# q20 = 1 * np.pi / 6
 q1_dot0 = 0.0
 q2_dot0 = 0.0
 
 dt = 0.001
 
 # CSVファイルの保存先ディレクトリ
-save_dir = r'try8'
+save_dir = r'dp1'
 
 # ディレクトリが存在しない場合は作成
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 
 # 運動方程式
-def update_world(q1, q2, q1_dot, q2_dot, F, action):
-    # 行動に基づく外力を設定
-    F = np.zeros((2, 1))
+def update_world(q1, q2, q1_dot, q2_dot, tau, action):
+    # 行動に基づくトルク[Nm]を設定
+    tau = np.zeros((2, 1))
     if action == 0:
-        F = np.array([[1.0], [0.0]])
+        tau = np.array([[1.0], [0.0]])
     elif action == 1:
-        F = np.array([[-1.0], [0.0]])
+        tau = np.array([[-1.0], [0.0]])
     elif action == 2:
-        F = np.array([[0.0], [1.0]])
+        tau = np.array([[0.0], [1.0]])
     elif action == 3:
-        F = np.array([[0.0], [-1.0]])
+        tau = np.array([[0.0], [-1.0]])
     elif action == 4:
-        F = np.array([[1.0], [1.0]])
+        tau = np.array([[1.0], [1.0]])
     elif action == 5:
-        F = np.array([[-1.0], [-1.0]])
+        tau = np.array([[-1.0], [-1.0]])
     elif action == 6:
-        F = np.array([[1.0], [-1.0]])
+        tau = np.array([[1.0], [-1.0]])
     elif action == 7:
-        F = np.array([[-1.0], [1.0]])
+        tau = np.array([[-1.0], [1.0]])
     elif action == 8:
-        F = np.array([[0.0], [0.0]])
+        tau = np.array([[0.0], [0.0]])
 
     # リンク2が可動範囲の限界に達した場合の外力
     if q2 <= 0:
-        F[1, 0] += 100.0  # 0度のとき、正の方向に5N
+        tau[1, 0] += 100.0  # 0度のとき、正の方向に5N
     elif q2 >= np.radians(145):
-        F[1, 0] += -100.0  # 145度のとき、負の方向に5N
+        tau[1, 0] += -100.0  # 145度のとき、負の方向に5N
 
     # 質量行列
     M_11 = m1*lg1**2 + I1 + m2*(l1**2 + lg2**2 + 2*l1*lg2*np.cos(q2)) + I2
@@ -99,37 +101,19 @@ def update_world(q1, q2, q1_dot, q2_dot, F, action):
     # 逆行列
     M_inv = np.linalg.inv(M)
 
-    q_ddot = M_inv.dot(F - C - G - B)
+    q_ddot = M_inv.dot(tau - C - G - B)
 
 
     return np.array([q1_dot, q2_dot, q_ddot[0, 0], q_ddot[1, 0]])
 
 # Runge-Kutta法
 def runge_kutta(t, q1, q2, q1_dot, q2_dot, action, dt):
-    F = np.zeros((2, 1))
-    if action == 0:
-        F = np.array([[1.0], [0.0]])
-    elif action == 1:
-        F = np.array([[-1.0], [0.0]])
-    elif action == 2:
-        F = np.array([[0.0], [1.0]])
-    elif action == 3:
-        F = np.array([[0.0], [-1.0]])
-    elif action == 4:
-        F = np.array([[1.0], [1.0]])
-    elif action == 5:
-        F = np.array([[-1.0], [-1.0]])
-    elif action == 6:
-        F = np.array([[1.0], [-1.0]])
-    elif action == 7:
-        F = np.array([[-1.0], [1.0]])
-    elif action == 8:
-        F = np.array([[0.0], [0.0]])
+    tau = np.zeros((2, 1))
 
-    k1 = dt * update_world(q1, q2, q1_dot, q2_dot, F, action)
-    k2 = dt * update_world(q1 + 0.5 * k1[0], q2 + 0.5 * k1[1], q1_dot + 0.5 * k1[2], q2_dot + 0.5 * k1[3], F, action)
-    k3 = dt * update_world(q1 + 0.5 * k2[0], q2 + 0.5 * k2[1], q1_dot + 0.5 * k2[2], q2_dot + 0.5 * k2[3], F, action)
-    k4 = dt * update_world(q1 + k3[0], q2 + k3[1], q1_dot + k3[2], q2_dot + k3[3], F, action)
+    k1 = dt * update_world(q1, q2, q1_dot, q2_dot, tau, action)
+    k2 = dt * update_world(q1 + 0.5 * k1[0], q2 + 0.5 * k1[1], q1_dot + 0.5 * k1[2], q2_dot + 0.5 * k1[3], tau, action)
+    k3 = dt * update_world(q1 + 0.5 * k2[0], q2 + 0.5 * k2[1], q1_dot + 0.5 * k2[2], q2_dot + 0.5 * k2[3], tau, action)
+    k4 = dt * update_world(q1 + k3[0], q2 + k3[1], q1_dot + k3[2], q2_dot + k3[3], tau, action)
 
     q1_new = q1 + (k1[0] + 2*k2[0] + 2*k3[0] + k4[0]) / 6
     q2_new = q2 + (k1[1] + 2*k2[1] + 2*k3[1] + k4[1]) / 6
@@ -198,12 +182,23 @@ def get_action(q1_bin, q2_bin, q1_dot_bin, q2_dot_bin):
     else:
         return np.argmax(Q[q1_bin, q2_bin, q1_dot_bin, q2_dot_bin, :])
 
-# 報酬関数の修正
-def compute_reward(q1, q2, q1_dot, q2_dot, next_q1, next_q2):
-    reward = -(q1 + 10 * q1_dot)  # リンク1の角速度に応じた報酬 
+# 報酬関数
+def compute_reward(q1, q2, q1_dot, q2_dot, next_q1):
+    # reward = -(q1 + 10 * q1_dot)  # リンク1の角速度に応じた報酬
+    v_x2 = -l1 * np.sin(q1) * q1_dot - l2 * np.sin(q1 + q2) * (q1_dot + q2_dot)
+    v_y2 = l1 * np.cos(q1) * q1_dot + l2 * np.cos(q1 + q2) * (q1_dot + q2_dot)
 
-    # if 
-    
+    v2 = np.sqrt(v_x2**2 + v_y2**2)
+
+    if next_q1 < q1:
+        q1_reward += 1
+    else:
+        q1_reward += -1
+
+    # 報酬 = -上腕リンクの位置＋あるステップ前後の上腕リンクの位置関係＋10×前腕リンクの先端の速度
+    reward = - q1 + q1_reward + 10 * v2
+        
+
     return reward
 
 # Q学習のメイン関数
@@ -250,7 +245,7 @@ def q_learning(runge_kutta):
                 # total_reward += reward
 
                 # 修正された報酬の計算
-                reward = compute_reward(q1, q2, q1_dot, q2_dot, next_q1, next_q2)
+                reward = compute_reward(q1, q2, q1_dot, q2_dot, next_q1)
                 total_reward += reward
                 sumReward += gamma ** (i + 1) * reward
                 Q[q1_bin, q2_bin, q1_dot_bin, q2_dot_bin, action] += alpha * (reward + gamma * np.max(Q[next_q1_bin, next_q2_bin, next_q1_dot_bin, next_q2_dot_bin, action]) + (1 - alpha) * Q[q1_bin, q2_bin, q1_dot_bin, q2_dot_bin, action])
